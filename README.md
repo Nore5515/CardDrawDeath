@@ -22,3 +22,12 @@ MILL X - Name taken from MTG. Put X cards from the deck into the discard.
 DRAW X - Self explanitory. Target player draws X cards.
     (should you be able to target yourself? Or would that be too powerful?)
 SKIP X - Can be played anytime you are to draw cards. You can skip drawing X cards.
+
+Decks are down below:
+
+DEFAULT - 10 Draw 1, 5 Mill 3, 5 Skip 2, 3 Draw 5, 3 Skip 5, 2 Mill 6, 1 Draw 10, 1 Skip 8
+
+
+
+(should you have a counter for all the cards you have to draw,
+and when you end your turn, you draw all of them?)
