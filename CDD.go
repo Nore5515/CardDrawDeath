@@ -59,8 +59,6 @@ func drawCards(x int, hand []Card, deck []Card) ([]Card, []Card, bool){
 	rand.Seed(time.Now().UTC().UnixNano())
 	z := -1
 
-
-
 	for i := 0; i < x; i++{
 		if (len(deck) == 0){
 			fmt.Println("^^^LOSER^^^!")
@@ -116,8 +114,10 @@ func takeTurn(p Player, d []Card) (Player, []Card, bool) {
 	fmt.Println(p.name, "is milling", p.milling, "cards")
 	d, notDead = millCards(p.milling, d)
 	// the player drawing all of his cards.
-	fmt.Println(p.name, "is drawing", p.drawing, "cards")
-	p.hand, d, notDead = drawCards(p.drawing, p.hand, d)
+	if (notDead){
+		fmt.Println(p.name, "is drawing", p.drawing, "cards")
+		p.hand, d, notDead = drawCards(p.drawing, p.hand, d)
+	}
 	// then resets his draw to 1, and mill to 0
 
 	p.drawing = 1
@@ -147,7 +147,59 @@ func playCard(p Player, victim Player, c Card) (Player, Player){
 	return p, victim
 }
 
+//ANN VARIABLE POTENTIAL
+// When to Mill (aiMillSensitivity, 0 means mill whenever possible, higher value means only mill when safer)
+// When to Skip (aiSkipSensitivity, 0 means they skip only if they'll draw the last card in the deck, higher value means they skip to a higher base deck value(???))
+// When to Attack (aiDrawSensitvity, 0 means they will attack only enough for a lethal hit, higher value means more overkill)
+// The AI should attack when they have enough cards to kill, mill when they don't, and skip if they're drawing more than they can handle
+func aiPlay(ai Player, victim Player, deck []Card) (Player, Player){
+	maxDraw, maxMill, maxSkip := 0, 0, 0		//the max amount that the AI can draw, mill and skip on its turn
+	aiDrawSensitvity, aiMillSensitivity, aiSkipSensitivity := 0, 0, 0
+	for i := 0; i < len(ai.hand); i++{
+		if (ai.hand[i].action == "DRAW"){maxDraw += ai.hand[i].count}
+		if (ai.hand[i].action == "MILL"){maxMill += ai.hand[i].count}
+		if (ai.hand[i].action == "SKIP"){maxSkip += ai.hand[i].count}
+	}
 
+	//if it is going to die, skip until it can live! or at least try to.
+	for (ai.drawing > len(deck) + aiSkipSensitivity && maxSkip > 0){
+		maxSkip -= nextCardWith(ai, "SKIP").count
+		ai, victim = playCard(ai, victim, nextCardWith(ai, "SKIP"))
+	}
+
+	//if it's in no danger of dying, mill the deck down to get it closer to 0.
+	//so, if it's milling less cards than are remaining in the deck after it draws, it'll play some mill cards
+	for (ai.milling < len(deck)-aiMillSensitivity-ai.drawing && maxMill > 0){
+		//SO LONG AS PLAYING THE CARD WOULD NOT PUSH AI.MILLING OVER LEN(deck)-ai.drawing, IT WILL PLAY
+		//otherwise it'd just commit suicide
+		if (len(deck)-ai.drawing-ai.milling-nextCardWith(ai, "MILL").count >= 0){
+			maxMill -= nextCardWith(ai, "MILL").count
+			ai, victim = playCard(ai, victim, nextCardWith(ai, "MILL"))
+		} else{
+			maxMill = 0
+		}
+	}
+
+	//finally, if they feel safe in an attack, they'll go for it!
+	if ((len(deck) + aiDrawSensitvity) - victim.drawing - victim.milling - maxDraw  < 0){
+		//fmt.Println("(", len(deck), "+", aiDrawSensitvity, ") -", victim.drawing, "-", victim.milling, "-", maxDraw, " = ", (len(deck) + aiDrawSensitvity) - victim.drawing - victim.milling - maxDraw)
+		for (maxDraw > 0){
+			maxDraw -= nextCardWith(ai, "DRAW").count
+			ai, victim = playCard(ai, victim, nextCardWith(ai, "DRAW"))
+		}
+	}
+
+	return ai, victim
+}
+
+func nextCardWith(p Player, search string) Card{
+	for i := 0; i < len(p.hand); i++{
+		if (p.hand[i].action == search){
+			return p.hand[i]
+		}
+	}
+	return Card{"",0}
+}
 
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -162,6 +214,7 @@ func main() {
 	for playing {
 		fmt.Print(":")
 		var response string
+		response = "exit" 	//default response
 		fmt.Scanln(&response)	//get player's response
 		// If you want to quit...
 		if (response == "exit" || response == "quit"){playing = false}
@@ -171,7 +224,6 @@ func main() {
 			fmt.Scanln(&response)	//get player's response
 			p1 := Player{response, []Card{}, 3, 0}	//note! player starts with draw 3, for a starting hand size.
 			fmt.Println("Let's begin!\n====================")
-
 			// Game actually begins here!
 			fmt.Println("Shuffling deck...")
 			deck := genDeck()									//create deck
@@ -187,16 +239,18 @@ func main() {
 				fmt.Println("Your Hand:", p1.hand)
 				fmt.Println("Your Opponent's Hand:", len(p2.hand))
 				fmt.Println(p1.name, "will Draw", p1.drawing, "and Mill", p1.milling)
-				fmt.Println(p2.name, "is Draw", p2.drawing, "and Mill", p2.milling)
+				fmt.Println(p2.name, "will Draw", p2.drawing, "and Mill", p2.milling)
 				fmt.Println("---------------")
 				fmt.Println("Play a card?")
+				response = "no"		//keeps the default to no, so if u just hit enter it ends ur turn
 				fmt.Scanln(&response)	//get player's response
 				if (response == "no" || response == "next" || response == "done" || response == "skip" || response == "next"){	//if you wanna end your turn
 					p1, deck, inGame = takeTurn(p1, deck)
 					if (!inGame){break;}	//if you lose, break the game loop
 					fmt.Println("DECK:",len(deck))
 					fmt.Println("---------------\nOPPONENTS TURN")
-					p2, p1 = playCard(p2, p1, p2.hand[0])
+					p2, p1 = aiPlay(p2, p1, deck)
+					//p2, p1 = playCard(p2, p1, p2.hand[0])
 					p2, deck, inGame = takeTurn(p2, deck)
 					if (!inGame){break;}	//if he loses, break the game loop
 				} else if (response == "exit" || response == "quit"){	//if you wanna quit
@@ -204,6 +258,8 @@ func main() {
 				} else if (response == "play" || response == "yes"){	//if you wanna play a card
 					fmt.Println("What is the index of the card you want to play?")
 					fmt.Scanln(&response)	//get player's response
+					p1, p2 = playCard(p1, p2, p1.hand[stoI(response)])
+				} else if _, err := strconv.Atoi(response); err == nil {
 					p1, p2 = playCard(p1, p2, p1.hand[stoI(response)])
 				}
 			}

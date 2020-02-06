@@ -9,7 +9,7 @@ Here's the basic game rules:
 
 1) You start the game by drawing X cards. This is your hand.
 2) On your turn, you may play as many cards as you want.
-2.5) Played cards go into the discard pile.
+  2.5) Played cards go into the discard pile.
 3) When you end your turn, you must draw one card.
 4) If you draw the last card in the deck, you are eliminated.
 5) When someone is eliminated, the discarded pile is shuffled back in.
@@ -26,7 +26,7 @@ SKIP X - Can be played anytime you are to draw cards. You can skip drawing X car
 Decks are down below:
 
 DEFAULT - 10 Draw 1,
-          5 Mill 3, 
+          5 Mill 3,
           5 Skip 2,
           3 Draw 5,
           3 Skip 5,
@@ -37,4 +37,4 @@ DEFAULT - 10 Draw 1,
 
 
 (should you have a counter for all the cards you have to draw,
-and when you end your turn, you draw all of them?)
+and when you end your turn, you draw all of them?) yes
