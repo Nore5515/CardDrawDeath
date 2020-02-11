@@ -6,6 +6,9 @@ import (
 	"os"
 	"math/rand"
 	"time"
+	"github.com/gorilla/mux"
+	"net/http"
+	"log"
 )
 
 type Card struct {
@@ -19,6 +22,29 @@ type Player struct {
 	drawing int  	//cards to draw at the end of your turn
 	milling int 	//cards to mill before drawing on your turn
 }
+
+type Data struct {
+	p1 Player
+	p2 Player
+	deck []Card
+}
+
+var gameData Data
+
+// WEB STUFF ALERT WOOP WOOP
+func get(w http.ResponseWriter, r *http.Request) {
+		bs := []byte(strconv.Itoa(len(gameData.p1.hand)))
+		w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte(bs))
+}
+
+func put(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusAccepted)
+    w.Write([]byte(`{"message": "put called"}`))
+}
+// WEB STUFF IS GONE
 
 func stoI (s string) int {
 	i, err := strconv.Atoi(s)
@@ -205,10 +231,17 @@ func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	//deck := genDeck()
-	//p1 := Player{"Noah", []Card{},1, 0}
+	//gameData.p1 := Player{"Noah", []Card{},1, 0}
+
+	// WEB ALERT WOOP WOOP
+	// routers are...uh...important for web stuff?
+	// then take in the GET function (seen above) and "handle" it...
+	// then start the server!
+	r := mux.NewRouter()
 
 
 	// Main game loop
+	webInitialized := false
 	playing := true
 	inGame := false
 	for playing {
@@ -222,13 +255,13 @@ func main() {
 		if (response == "start" || response == "new" || response == "begin"){
 			fmt.Println("What is your name?")
 			fmt.Scanln(&response)	//get player's response
-			p1 := Player{response, []Card{}, 3, 0}	//note! player starts with draw 3, for a starting hand size.
+			gameData.p1 = Player{response, []Card{}, 3, 0}	//note! player starts with draw 3, for a starting hand size.
 			fmt.Println("Let's begin!\n====================")
 			// Game actually begins here!
 			fmt.Println("Shuffling deck...")
 			deck := genDeck()									//create deck
 			fmt.Println("Drawing hand...")
-			p1, deck, _ = takeTurn(p1, deck)			//draw hand
+			gameData.p1, deck, _ = takeTurn(gameData.p1, deck)			//draw hand
 			fmt.Println("Generating opponent...")
 			p2 := Player{"roBob", []Card{}, 3, 0}		//creates a second player, AI opponent NOTE: current AI just plays first card in it's hand
 			p2, deck, _ = takeTurn(p2, deck)
@@ -236,21 +269,31 @@ func main() {
 			inGame = true
 			for inGame {
 				fmt.Println("===============\nDECK:",len(deck))
-				fmt.Println("Your Hand:", p1.hand)
+				fmt.Println("Your Hand:", gameData.p1.hand)
+				// TESTING
+				r.HandleFunc("/", get).Methods(http.MethodGet)
+				//go log.Fatal(http.ListenAndServe(":8080", r))
+				// blocking funvytion must be in coroutine
+				// alo breaks on second loop
+				if (!webInitialized){
+						webInitialized = true
+						go func() { log.Fatal(http.ListenAndServe(":8080", r)) }()
+				}
+				// TESTING
 				fmt.Println("Your Opponent's Hand:", len(p2.hand))
-				fmt.Println(p1.name, "will Draw", p1.drawing, "and Mill", p1.milling)
+				fmt.Println(gameData.p1.name, "will Draw", gameData.p1.drawing, "and Mill", gameData.p1.milling)
 				fmt.Println(p2.name, "will Draw", p2.drawing, "and Mill", p2.milling)
 				fmt.Println("---------------")
 				fmt.Println("Play a card?")
 				response = "no"		//keeps the default to no, so if u just hit enter it ends ur turn
 				fmt.Scanln(&response)	//get player's response
 				if (response == "no" || response == "next" || response == "done" || response == "skip" || response == "next"){	//if you wanna end your turn
-					p1, deck, inGame = takeTurn(p1, deck)
+					gameData.p1, deck, inGame = takeTurn(gameData.p1, deck)
 					if (!inGame){break;}	//if you lose, break the game loop
 					fmt.Println("DECK:",len(deck))
 					fmt.Println("---------------\nOPPONENTS TURN")
-					p2, p1 = aiPlay(p2, p1, deck)
-					//p2, p1 = playCard(p2, p1, p2.hand[0])
+					p2, gameData.p1 = aiPlay(p2, gameData.p1, deck)
+					//p2, gameData.p1 = playCard(p2, gameData.p1, p2.hand[0])
 					p2, deck, inGame = takeTurn(p2, deck)
 					if (!inGame){break;}	//if he loses, break the game loop
 				} else if (response == "exit" || response == "quit"){	//if you wanna quit
@@ -258,9 +301,9 @@ func main() {
 				} else if (response == "play" || response == "yes"){	//if you wanna play a card
 					fmt.Println("What is the index of the card you want to play?")
 					fmt.Scanln(&response)	//get player's response
-					p1, p2 = playCard(p1, p2, p1.hand[stoI(response)])
+					gameData.p1, p2 = playCard(gameData.p1, p2, gameData.p1.hand[stoI(response)])
 				} else if _, err := strconv.Atoi(response); err == nil {
-					p1, p2 = playCard(p1, p2, p1.hand[stoI(response)])
+					gameData.p1, p2 = playCard(gameData.p1, p2, gameData.p1.hand[stoI(response)])
 				}
 			}
 			// End of game loop.
