@@ -46,6 +46,31 @@ class App  extends React.Component{
           .catch(console.log)
   }
 
+  displayCards = () => {
+    var i
+    var string = ""
+    //if (this.state.data) {var length = this.state.data.play1.hand.length}
+    //else {var length = 0}
+    if (this.state.data){
+      Object.keys(this.state.data).forEach(huh => {
+        Object.keys(huh).forEach(yep => {
+          if (yep == 0){
+            string += yep.name
+          }
+        })
+        string += huh
+        string += ","
+      })
+
+      // for (i = 0; i < Object.keys(this.state.data.play1.Hand).length; i++){
+      //   //string += Object.keys(this.state.data.play1.Hand)
+      // }
+      //var huh = JSON.parse(this.state.data.play1.Hand)
+      //return this.state.data.play1.Hand[0].Action
+    }
+    return string
+  }
+
   render (){
     const { mydata } = this.state;
 
@@ -58,6 +83,8 @@ class App  extends React.Component{
           </p>
           <Button>Hi</Button>
           {this.state.data && <p>Look at this = {this.state.data.play1.name}</p>}
+          {this.displayCards()}
+          {/*{this.state.data && <h1>Look at this = {JSON.stringify(this.state.data)}</h1>}*/}
           <a
             className="App-link"
             href="https://reactjs.org"
