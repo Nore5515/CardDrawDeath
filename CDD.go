@@ -50,7 +50,8 @@ func enableCors(w *http.ResponseWriter) {
 }
 
 func put(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "application/json")
+		fmt.Println("PUTTING")
+		w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusAccepted)
     w.Write([]byte(`{"message": "put called"}`))
 }
@@ -283,13 +284,16 @@ func main() {
 				r.HandleFunc("/", get).Methods(http.MethodGet)
 				//r.HandleFunc("/player", getAllPlayers).Methods(http.MethodGet)
 				//r.HandleFunc("/player/:playerName", getPlayerByName(name)).Methods(http.MethodGet)
-				r.HandleFunc("", put).Methods(http.MethodPut)
+				r.HandleFunc("/", put).Methods(http.MethodPut)
 				//go log.Fatal(http.ListenAndServe(":8080", r))
 				// blocking funvytion must be in coroutine
 				// alo breaks on second loop
 				if (!webInitialized){
 						webInitialized = true
-						cors := handlers.CORS()
+						headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
+						originsOk := handlers.AllowedOrigins([]string{"*"})
+						methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+						cors := handlers.CORS(originsOk, headersOk, methodsOk)
 						go func() { log.Fatal(http.ListenAndServe(":8080", cors(r))) }()
 				}
 				// TESTING

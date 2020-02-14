@@ -1,5 +1,5 @@
 import React from 'react';
-import useState from 'react'
+//import useState from 'react'
 import logo from './gato.jpg';
 import './App.css';
 import {Button} from "rbx";
@@ -96,14 +96,31 @@ class App  extends React.Component{
     return (
       <div>
       {props.Hand.map((card) => {
-        return (<li>{card.Action}</li>)
+        return (<Button onClick={this.activateButton}>{card.Action} {card.Count}</Button>)
       })}
       </div>
     )
   }
 
+  activateButton = () => {
+    if (this.state.testNumber === 0){
+      this.state.testNumber++;
+    } else{
+      this.state.testNumber--;
+    }
+
+    fetch('http://localhost:8080', {
+       method: 'PUT'
+     })
+        //.then(console.log("hello world1"))
+        //.then(response => response.json())
+        .catch(console.log)
+
+     this.setState({})
+  }
+
   render (){
-    const { mydata } = this.state;
+    //const { mydata } = this.state;
 
     return (
       <div className="App">
@@ -116,6 +133,7 @@ class App  extends React.Component{
           <Player player={"pdsajkdhksqdhqllay1"} datum={this.state.data}>Player</Player>
           {this.state.data && <p>Look at this = {this.state.data.play1.name}</p>}
           {this.state.data && this.doDisplay(this.state.data.play1)}
+          {this.state.testNumber}
           {/*{this.state.data && <h1>Look at this = {JSON.stringify(this.state.data)}</h1>}*/}
           <a
             className="App-link"
