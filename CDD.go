@@ -29,7 +29,6 @@ type Data struct {
 	P1 Player		`json:"play1"`
 	P2 Player		`json:"play2"`
 	Deck []Card	`json:"deck"`
-	TESTING string
 }
 
 var gameData Data
@@ -38,7 +37,6 @@ var gameData Data
 func get(w http.ResponseWriter, r *http.Request) {
 		// TODO: Find a way to convert Data into a json stringy thing
 		//bs := []byte(strconv.Itoa(len(gameData.P1.Hand)))
-		gameData.TESTING = "Is this thing on?"
 		bs, _ := json.Marshal(gameData)
 		w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)

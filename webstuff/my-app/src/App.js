@@ -1,6 +1,6 @@
 import React from 'react';
 import useState from 'react'
-import logo from './logo.svg';
+import logo from './gato.jpg';
 import './App.css';
 import {Button} from "rbx";
 
@@ -46,29 +46,60 @@ class App  extends React.Component{
           .catch(console.log)
   }
 
-  displayCards = () => {
-    var i
-    var string = ""
+  displayCards = (props) => {
+    //var i
+    //var string = ""
     //if (this.state.data) {var length = this.state.data.play1.hand.length}
     //else {var length = 0}
-    if (this.state.data){
-      Object.keys(this.state.data).forEach(huh => {
-        Object.keys(huh).forEach(yep => {
-          if (yep == 0){
-            string += yep.name
+    if (props) {
+
+      return (props.Hand[0].Action);
+
+      // const names = this.state.data.map((x) =>
+      //   <li>{x}</li>
+      // );
+      //
+      //
+      /*
+      let player = null
+
+      return (
+        Object.keys(this.state.data).map((huh) => {
+          player = this.state.data[huh]
+          if (player.Hand) {
+            <li>player.Hand[0].Action</li>
           }
-        })
-        string += huh
-        string += ","
-      })
+        }
+      );
+      */
+
+      /*
+      return (
+        Object.keys(this.state.data).map((huh) =>
+          <li>{this.state.data[huh].name} - {huh} -</li>
+
+        )
+      )
+      */
 
       // for (i = 0; i < Object.keys(this.state.data.play1.Hand).length; i++){
       //   //string += Object.keys(this.state.data.play1.Hand)
       // }
       //var huh = JSON.parse(this.state.data.play1.Hand)
       //return this.state.data.play1.Hand[0].Action
+    } else {
+      return (<p>Empty</p>);
     }
-    return string
+  }
+
+  doDisplay = (props) => {
+    return (
+      <div>
+      {props.Hand.map((card) => {
+        return (<li>{card.Action}</li>)
+      })}
+      </div>
+    )
   }
 
   render (){
@@ -82,8 +113,9 @@ class App  extends React.Component{
             Edit <code>src/App.js</code> and save to reload.
           </p>
           <Button>Hi</Button>
+          <Player player={"pdsajkdhksqdhqllay1"} datum={this.state.data}>Player</Player>
           {this.state.data && <p>Look at this = {this.state.data.play1.name}</p>}
-          {this.displayCards()}
+          {this.state.data && this.doDisplay(this.state.data.play1)}
           {/*{this.state.data && <h1>Look at this = {JSON.stringify(this.state.data)}</h1>}*/}
           <a
             className="App-link"
@@ -99,5 +131,39 @@ class App  extends React.Component{
   }
 
 }
+
+class Player extends React.Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      datum: props.data,
+      player: props.player
+    };
+  }
+
+  componentDidMount(){
+    this.setState({datum: this.state.datum})
+  }
+
+  render() {
+
+    if (this.state.datum) {
+      return (
+
+        <p>Player: {this.state.data[this.state.player].name}</p>
+
+      )
+    } else {
+      return (
+        <div>
+          <h1>{this.state.player}</h1>
+          <p>Player: Empty</p>
+        </div>
+      )
+    }
+
+  }
+}
+
 
 export default App;
